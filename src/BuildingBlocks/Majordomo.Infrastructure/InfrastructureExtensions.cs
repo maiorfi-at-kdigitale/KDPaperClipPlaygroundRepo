@@ -21,7 +21,7 @@ public static class InfrastructureExtensions
         services.TryAddSingleton<IIntegrationEventPublisher, LoggingIntegrationEventPublisher>();
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.Section));
         services.AddOptions<LeadershipOptions>().Bind(configuration.GetSection(LeadershipOptions.Section));
-        services.AddIdempotency();
+        services.AddIdempotency(configuration);
         return services;
     }
 

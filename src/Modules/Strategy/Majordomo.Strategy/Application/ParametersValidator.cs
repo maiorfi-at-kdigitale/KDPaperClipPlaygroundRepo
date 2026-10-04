@@ -10,14 +10,15 @@ namespace Majordomo.Strategy.Application;
 public sealed class ParametersValidator
 {
     internal static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
-    private readonly JsonSchema _schema;
+    // Lo schema ha un $id: JsonSchema.Net lo registra globalmente, quindi va caricato una sola volta per processo.
+    private static readonly Lazy<JsonSchema> Schema = new(Load);
 
-    public ParametersValidator()
+    private static JsonSchema Load()
     {
         using var stream = typeof(ParametersValidator).Assembly.GetManifestResourceStream("trading-job-parameters.v1.schema.json")
             ?? throw new InvalidOperationException("Schema dei parametri non incorporato nell'assembly.");
         using var reader = new StreamReader(stream);
-        _schema = JsonSchema.FromText(reader.ReadToEnd());
+        return JsonSchema.FromText(reader.ReadToEnd());
     }
 
     /// <summary>Valida e restituisce il JSON normalizzato; lancia <see cref="RequestValidationException"/> (422) se non valido.</summary>
@@ -28,7 +29,7 @@ public sealed class ParametersValidator
             throw new RequestValidationException("parameters", "I parametri devono essere un oggetto JSON.");
         }
 
-        var result = _schema.Evaluate(parameters, new EvaluationOptions { OutputFormat = OutputFormat.List });
+        var result = Schema.Value.Evaluate(parameters, new EvaluationOptions { OutputFormat = OutputFormat.List });
         if (!result.IsValid)
         {
             var errors = (result.Details ?? [])

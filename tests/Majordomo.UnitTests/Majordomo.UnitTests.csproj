@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Test unitari del dominio e delle funzioni pure (nessuna dipendenza infrastrutturale). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Strategy\Majordomo.Strategy\Majordomo.Strategy.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Risk\Majordomo.Risk\Majordomo.Risk.csproj" />
+    <ProjectReference Include="..\..\tools\Majordomo.ForecastingStub\Majordomo.ForecastingStub.csproj" Aliases="stub" />
+  </ItemGroup>
+</Project>

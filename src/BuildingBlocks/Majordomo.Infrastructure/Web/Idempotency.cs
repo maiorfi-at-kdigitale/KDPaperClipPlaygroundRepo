@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Majordomo.Infrastructure.Web;
@@ -62,9 +63,23 @@ public static class IdempotencyExtensions
         where TBuilder : IEndpointConventionBuilder =>
         builder.AddEndpointFilter<TBuilder, IdempotencyFilter>();
 
-    internal static IServiceCollection AddIdempotency(this IServiceCollection services)
+    /// <summary>Cache distribuita: Redis se ConnectionStrings:Redis è valorizzata, altrimenti in memoria (singola istanza).</summary>
+    internal static IServiceCollection AddIdempotency(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDistributedMemoryCache();
+        var redis = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrWhiteSpace(redis))
+        {
+            services.AddStackExchangeRedisCache(o =>
+            {
+                o.Configuration = redis;
+                o.InstanceName = "majordomo:";
+            });
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
+
         services.AddScoped<IdempotencyFilter>();
         return services;
     }
