@@ -1,0 +1,120 @@
+# Servizi accessori per lo sviluppo locale di Capital-Majordomo.
+# Pensato per Docker Desktop su Windows con backend WSL 2 (funziona anche su Linux/macOS).
+#
+#   Avvio:    docker compose -f deploy/local/docker-compose.yml up -d
+#             (oppure .\deploy\local\up.ps1 da PowerShell)
+#   Stop:     docker compose -f deploy/local/docker-compose.yml down
+#   Reset DB: docker compose -f deploy/local/docker-compose.yml down -v
+#
+# I servizi applicativi (Majordomo.Api, Majordomo.Worker, Majordomo.ForecastingStub) NON girano qui:
+# si avviano "bare metal" da Visual Studio 2026 (profilo di avvio multiplo "Majordomo (tutto)").
+# Note WSL: i dati stanno in volumi Docker nominati (nessun bind mount di NTFS per PostgreSQL:
+# evita problemi di permessi e prestazioni); i file montati (wiremock, otel) sono di sola lettura.
+# Nessun segreto reale: solo credenziali di sviluppo, sovrascrivibili dal file .env (vedi .env.example).
+name: majordomo-dev
+
+services:
+  # PostgreSQL 17 + TimescaleDB (ADR-0003): un database, uno schema per modulo.
+  postgres:
+    image: timescale/timescaledb:2.22.1-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-majordomo}
+      POSTGRES_USER: ${POSTGRES_USER:-majordomo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-majordomo-dev-only}
+      TZ: UTC
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Cache distribuita (idempotency key, cache applicative). Usata se ConnectionStrings:Redis è valorizzata.
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Mock di Capital.com (WireMock) per lavorare offline e senza credenziali Demo.
+  capital-mock:
+    image: wiremock/wiremock:3.13.1
+    restart: unless-stopped
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "${CAPITAL_MOCK_PORT:-8089}:8080"
+    volumes:
+      - ./wiremock:/home/wiremock:ro
+
+  # Grafana + Loki + Tempo + Prometheus + OTel Collector in un'unica immagine di sviluppo.
+  # Grafana: http://localhost:3000 (admin/admin). Gli host .NET esportano su OTLP localhost:4317.
+  otel-lgtm:
+    image: grafana/otel-lgtm:0.11.10
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+
+  # Interfaccia web per PostgreSQL: http://localhost:5050 (dev@majordomo.local / majordomo-dev-only).
+  pgadmin:
+    image: dpage/pgadmin4:9.8
+    profiles: ["tools"]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@majordomo.local
+      PGADMIN_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-majordomo-dev-only}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Message broker OPZIONALE (profilo "messaging"). ADR-0003 prevede outbox + nessun broker iniziale:
+  # il codice attuale NON lo usa. È disponibile per spike/prove di integrazione futura (es. pubblicazione
+  # degli eventi AsyncAPI) e va adottato solo dopo una decisione architetturale.
+  # Management UI: http://localhost:15672 (majordomo / majordomo-dev-only).
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    profiles: ["messaging"]
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: majordomo
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-majordomo-dev-only}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Forecasting Service Python (ADR-0002): da abilitare quando esisterà l'immagine (task T-05).
+  # In sviluppo si usa lo stub .NET tools/Majordomo.ForecastingStub (stesso contratto gRPC, porta 50051).
+  # forecasting:
+  #   build: ../../src/forecasting-svc
+  #   environment:
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
+  #   ports:
+  #     - "50051:50051"
+
+volumes:
+  pgdata:
+  rabbitmq:
