@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://k-digitale.cloud/schemas/majordomo/trading-job-parameters/v1",
+  "title": "TradingJobParameters v1",
+  "description": "Parametri del 'job/algoritmo di gestione delle transazioni' di Capital-Majordomo. Ogni modifica crea una nuova ParameterSetVersion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["universe", "model", "signal", "risk", "operationalLimits", "mode"],
+  "properties": {
+    "universe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["epics", "resolution", "horizonSteps", "contextLength"],
+      "properties": {
+        "epics": {
+          "type": "array", "minItems": 1, "maxItems": 40, "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Z0-9_.]{2,40}$" },
+          "description": "Epic Capital.com (max 40: limite di sottoscrizione WebSocket)."
+        },
+        "resolution": { "enum": ["MINUTE", "MINUTE_5", "MINUTE_15", "MINUTE_30", "HOUR", "HOUR_4", "DAY", "WEEK"] },
+        "horizonSteps": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "contextLength": { "type": "integer", "minimum": 64, "maximum": 16384, "default": 512 },
+        "priceField": { "enum": ["mid", "bid", "ask"], "default": "mid" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family"],
+      "properties": {
+        "family": { "enum": ["timesfm-3", "timesfm-2.5", "statsforecast-ets", "statsforecast-arima", "bigquery-ai-forecast"] },
+        "version": { "type": "string" },
+        "quantiles": {
+          "type": "array", "items": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+          "default": [0.1, 0.5, 0.9], "minItems": 1
+        },
+        "covariates": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "ensemble": {
+          "type": "array",
+          "description": "Modelli aggiuntivi per la strategia EnsembleConsensus.",
+          "items": { "enum": ["timesfm-3", "timesfm-2.5", "statsforecast-ets", "statsforecast-arima"] }
+        }
+      }
+    },
+    "signal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "minConfidence"],
+      "properties": {
+        "strategy": { "enum": ["ExpectedReturnThreshold", "QuantileBreakout", "EnsembleConsensus"] },
+        "expectedReturnThresholdPct": { "type": "number", "minimum": 0, "default": 0.2 },
+        "costBufferMultiplier": { "type": "number", "minimum": 1, "default": 1.5, "description": "Il rendimento atteso deve superare costi stimati x moltiplicatore." },
+        "minConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "minModelsAgreeing": { "type": "integer", "minimum": 1, "default": 2 },
+        "allowShort": { "type": "boolean", "default": true },
+        "exitOnOppositeSignal": { "type": "boolean", "default": true }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "allocation", "riskPerTradePct", "maxDailyLossPct", "maxDrawdownPct", "maxLeverage", "maxOpenPositions", "stopLoss"],
+      "properties": {
+        "profile": { "enum": ["conservative", "balanced", "aggressive", "custom"], "description": "Preset di partenza; i valori espliciti prevalgono." },
+        "allocation": {
+          "type": "object", "additionalProperties": false, "required": ["amount", "currency"],
+          "properties": {
+            "amount": { "type": "number", "exclusiveMinimum": 0 },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          }
+        },
+        "riskPerTradePct": { "type": "number", "exclusiveMinimum": 0, "maximum": 5 },
+        "maxDailyLossPct": { "type": "number", "exclusiveMinimum": 0, "maximum": 20 },
+        "maxDrawdownPct": { "type": "number", "exclusiveMinimum": 0, "maximum": 50 },
+        "maxLeverage": { "type": "number", "minimum": 1, "maximum": 30 },
+        "maxExposurePerInstrumentPct": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000, "default": 100 },
+        "maxTotalExposurePct": { "type": "number", "exclusiveMinimum": 0, "maximum": 3000, "default": 300 },
+        "maxOpenPositions": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "stopLoss": {
+          "type": "object", "additionalProperties": false, "required": ["method"],
+          "properties": {
+            "method": { "enum": ["quantileBand", "atrMultiple", "fixedPoints"] },
+            "multiplier": { "type": "number", "exclusiveMinimum": 0, "default": 1.0 },
+            "minDistancePoints": { "type": "number", "minimum": 0 },
+            "guaranteed": { "type": "boolean", "default": false },
+            "trailing": { "type": "boolean", "default": false }
+          }
+        },
+        "takeProfit": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "method": { "enum": ["none", "riskRewardRatio", "quantileTarget"], "default": "riskRewardRatio" },
+            "riskRewardRatio": { "type": "number", "exclusiveMinimum": 0, "default": 1.5 }
+          }
+        },
+        "requireManualApproval": { "type": "boolean", "default": false }
+      }
+    },
+    "operationalLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxOrdersPerDay"],
+      "properties": {
+        "tradingWindows": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["days", "from", "to", "timeZone"],
+            "properties": {
+              "days": { "type": "array", "items": { "enum": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] }, "minItems": 1 },
+              "from": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+              "to": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+              "timeZone": { "type": "string", "description": "IANA, es. Europe/Rome" }
+            }
+          }
+        },
+        "maxOrdersPerDay": { "type": "integer", "minimum": 1, "maximum": 500 },
+        "cooldownAfterLossMinutes": { "type": "integer", "minimum": 0, "default": 0 },
+        "maxPositionDurationSteps": { "type": "integer", "minimum": 1, "description": "Time stop: chiusura dopo N candele (default = horizonSteps)." },
+        "flatBeforeWeekend": { "type": "boolean", "default": true },
+        "blockAroundMacroEventsMinutes": { "type": "integer", "minimum": 0, "default": 30 }
+      }
+    },
+    "mode": { "enum": ["backtest", "paper", "live"] }
+  }
+}

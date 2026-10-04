@@ -1,0 +1,12 @@
+{
+  "mappings": [
+    {
+      "request": { "method": "GET", "url": "/api/v1/time" },
+      "response": { "status": 200, "jsonBody": { "serverTime": "{{now epoch=true}}" }, "transformers": ["response-template"] }
+    },
+    {
+      "request": { "method": "GET", "url": "/api/v1/ping" },
+      "response": { "status": 200, "jsonBody": { "status": "OK" } }
+    }
+  ]
+}

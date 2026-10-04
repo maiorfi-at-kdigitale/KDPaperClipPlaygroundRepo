@@ -45,3 +45,4 @@ task, coordinamento degli agenti, e ciclo di lavoro sul codice fino al push su `
 | --- | --- | --- |
 | KDP-1 | Paperclip onboarding | Da fare |
 | KDP-2 | Prima commit | In corso → inizializzazione del repository con questo README |
+| KDP-20 | Progettazione piattaforma "Capital-Majordomo" | Proposta architetturale in [`docs/capital-majordomo/`](docs/capital-majordomo/README.md) |

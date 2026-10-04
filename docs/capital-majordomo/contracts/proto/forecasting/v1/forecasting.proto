@@ -1,0 +1,104 @@
+// Contratto fra core .NET (client) e forecasting-svc Python (server).
+// Regole: solo modifiche additive in v1 (nuovi campi con nuovi numeri, mai riuso/rinumerazione).
+// Verifica in CI: `buf lint` + `buf breaking --against '.git#branch=main'`.
+syntax = "proto3";
+
+package majordomo.forecasting.v1;
+
+option csharp_namespace = "Majordomo.Forecasting.Contracts.V1";
+
+import "google/protobuf/timestamp.proto";
+
+service ForecastingService {
+  // Previsione per una o più serie. Idempotente: stesso input -> stesso output per la stessa model_version.
+  // Il client imposta sempre una deadline (default 3 s).
+  rpc Forecast(ForecastRequest) returns (ForecastResponse);
+
+  // Elenco dei modelli caricati e pronti (usato per readiness e validazione dei job).
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+}
+
+message ModelRef {
+  // Famiglia: "timesfm-3", "timesfm-2.5", "statsforecast-ets", "statsforecast-arima", "bigquery-ai-forecast".
+  string family = 1;
+  // Versione richiesta; vuota = versione predefinita del servizio. La risposta riporta sempre quella effettiva.
+  string version = 2;
+}
+
+message Series {
+  // Identificativo opaco lato client (es. "US500:MINUTE_15:mid").
+  string series_id = 1;
+  // Timestamp della prima osservazione e passo regolare in secondi (serie già allineate e senza buchi).
+  google.protobuf.Timestamp start = 2;
+  int64 step_seconds = 3;
+  repeated double values = 4;
+  // Covariate dinamiche opzionali (passate, e future se note per l'orizzonte).
+  repeated Covariate covariates = 5;
+}
+
+message Covariate {
+  string name = 1;
+  repeated double past_values = 2;    // stessa lunghezza di Series.values
+  repeated double future_values = 3;  // lunghezza = horizon, solo se note in anticipo
+}
+
+message ForecastRequest {
+  ModelRef model = 1;
+  repeated Series series = 2;
+  // Numero di passi da prevedere.
+  int32 horizon = 3;
+  // Quantili richiesti, es. [0.1, 0.5, 0.9].
+  repeated double quantiles = 4;
+  // Correlazione con il ciclo decisionale (anche in W3C traceparent via metadata gRPC).
+  string request_id = 5;
+}
+
+message QuantileForecast {
+  double quantile = 1;
+  repeated double values = 2; // lunghezza = horizon
+}
+
+message SeriesForecast {
+  string series_id = 1;
+  repeated double point = 2; // lunghezza = horizon
+  repeated QuantileForecast quantiles = 3;
+  // Hash (SHA-256) di valori + covariate + parametri: lega la previsione all'input per l'audit.
+  string input_fingerprint = 4;
+  // Valorizzato se la singola serie è fallita senza far fallire il batch.
+  SeriesError error = 5;
+}
+
+message SeriesError {
+  enum Code {
+    CODE_UNSPECIFIED = 0;
+    CODE_CONTEXT_TOO_SHORT = 1;
+    CODE_INVALID_VALUES = 2;     // NaN, infiniti, buchi
+    CODE_HORIZON_TOO_LONG = 3;
+    CODE_MODEL_ERROR = 4;
+  }
+  Code code = 1;
+  string message = 2;
+}
+
+message ForecastResponse {
+  ModelRef model = 1;              // modello e versione effettivamente usati
+  repeated SeriesForecast forecasts = 2;
+  google.protobuf.Timestamp generated_at = 3;
+  double inference_ms = 4;
+}
+
+message ListModelsRequest {}
+
+message ModelInfo {
+  ModelRef model = 1;
+  int32 max_context_length = 2;
+  int32 max_horizon = 3;
+  bool supports_covariates = 4;
+  bool supports_multivariate = 5;
+  string weights_sha256 = 6;
+  string license = 7;
+}
+
+message ListModelsResponse {
+  repeated ModelInfo models = 1;
+}

@@ -1,0 +1,52 @@
+# Ambiente di sviluppo locale di riferimento per Capital-Majordomo.
+# Avvio: docker compose -f docs/capital-majordomo/deploy/docker-compose.yml up -d
+# I servizi applicativi (api, worker, forecasting) si avviano da IDE/.NET Aspire o si
+# aggiungono qui quando esisteranno le immagini. Nessun segreto reale in questo file:
+# le credenziali Capital.com (solo DEMO in locale) arrivano da user-secrets / variabili d'ambiente.
+name: majordomo-dev
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg17
+    environment:
+      POSTGRES_DB: majordomo
+      POSTGRES_USER: majordomo
+      POSTGRES_PASSWORD: majordomo-dev-only
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U majordomo -d majordomo"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Grafana + Loki + Tempo + Prometheus/Mimir + OTel Collector in un'unica immagine di sviluppo.
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    ports:
+      - "3000:3000"   # Grafana
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+
+  # Mock del broker per test manuali offline (WireMock con mapping in ./wiremock).
+  capital-mock:
+    image: wiremock/wiremock:latest
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
+
+  # Da abilitare quando l'immagine esisterà (task T-05).
+  # forecasting:
+  #   build: ../../../src/forecasting-svc
+  #   environment:
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
+  #     MAJORDOMO_DEFAULT_MODEL: timesfm-2.5
+  #   ports:
+  #     - "50051:50051"
+
+volumes:
+  pgdata:

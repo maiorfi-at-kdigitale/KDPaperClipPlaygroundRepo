@@ -1,0 +1,91 @@
+# Pipeline CI di riferimento (GitHub Actions) per Capital-Majordomo.
+# Copiare in .github/workflows/ci.yml quando esisterà il codice (task T-01).
+# Non è attiva in questa posizione.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: bufbuild/buf-action@v1
+        with:
+          input: contracts/proto
+          lint: true
+          breaking: ${{ github.event_name == 'pull_request' }}
+          breaking_against: ${{ github.event.repository.clone_url }}#branch=main,subdir=contracts/proto
+      - name: Lint OpenAPI / AsyncAPI
+        run: |
+          npx --yes @redocly/cli@latest lint contracts/openapi/management-api.v1.yaml
+          npx --yes @asyncapi/cli@latest validate contracts/asyncapi/integration-events.v1.yaml
+
+  dotnet:
+    runs-on: ubuntu-latest
+    needs: contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - run: dotnet restore --locked-mode
+      - run: dotnet build -c Release --no-restore -warnaserror
+      - name: Unit + architecture tests
+        run: dotnet test -c Release --no-build --filter "Category!=Integration" --collect:"XPlat Code Coverage"
+      - name: Integration tests (Testcontainers)
+        run: dotnet test -c Release --no-build --filter "Category=Integration"
+      - name: Vulnerable packages
+        run: dotnet list package --vulnerable --include-transitive
+
+  python:
+    runs-on: ubuntu-latest
+    needs: contracts
+    defaults:
+      run:
+        working-directory: src/forecasting-svc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - run: uv run ruff check . && uv run mypy .
+      - run: uv run pytest -q
+      - run: uv run pip-audit
+
+  images:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [dotnet, python]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write   # firma keyless con cosign
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - name: Publish majordomo container (SDK container support, chiseled, non-root)
+        run: >
+          dotnet publish src/Majordomo.Worker -c Release
+          -p:PublishProfile=DefaultContainer
+          -p:ContainerRepository=ghcr.io/${{ github.repository_owner }}/majordomo
+          -p:ContainerImageTags='"${{ github.sha }}"'
+          -p:ContainerFamily=noble-chiseled
+      - name: Build forecasting-svc image
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/forecasting-svc:${{ github.sha }} src/forecasting-svc
+      - name: SBOM + scan + sign
+        run: |
+          echo "syft -> SBOM, trivy -> scan (fail on CRITICAL), cosign sign --yes per entrambe le immagini"
+
+  # Il deploy (paper -> live) avviene per promozione della stessa immagine via GitOps/IaC,
+  # con approvazione manuale dell'environment 'live' su GitHub (required reviewers).

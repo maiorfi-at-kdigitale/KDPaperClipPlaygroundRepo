@@ -1,0 +1,197 @@
+asyncapi: 3.0.0
+info:
+  title: Capital-Majordomo Integration Events
+  version: 1.0.0
+  description: |
+    Eventi di integrazione pubblici (contratto stabile) emessi tramite Transactional Outbox.
+    Consegna at-least-once: i consumatori devono deduplicare su `id` (Inbox).
+    Ordinamento garantito solo per chiave di partizione `jobId`.
+    In v1 il trasporto è un dispatcher HTTP (webhook firmati HMAC); il canale è predisposto per
+    un broker (es. NATS JetStream / Azure Service Bus) senza cambiare il payload.
+defaultContentType: application/cloudevents+json
+servers:
+  webhook:
+    host: notifications.internal
+    protocol: https
+    description: Dispatcher webhook v1
+channels:
+  jobLifecycle:
+    address: majordomo.v1.job.lifecycle
+    messages:
+      JobHalted: { $ref: '#/components/messages/JobHalted' }
+      JobStatusChanged: { $ref: '#/components/messages/JobStatusChanged' }
+  trading:
+    address: majordomo.v1.trading
+    messages:
+      PositionOpened: { $ref: '#/components/messages/PositionOpened' }
+      PositionClosed: { $ref: '#/components/messages/PositionClosed' }
+      OrderRejected: { $ref: '#/components/messages/OrderRejected' }
+  risk:
+    address: majordomo.v1.risk
+    messages:
+      RiskLimitReached: { $ref: '#/components/messages/RiskLimitReached' }
+      KillSwitchActivated: { $ref: '#/components/messages/KillSwitchActivated' }
+      ReconciliationDriftDetected: { $ref: '#/components/messages/ReconciliationDriftDetected' }
+operations:
+  publishJobLifecycle:
+    action: send
+    channel: { $ref: '#/channels/jobLifecycle' }
+  publishTrading:
+    action: send
+    channel: { $ref: '#/channels/trading' }
+  publishRisk:
+    action: send
+    channel: { $ref: '#/channels/risk' }
+components:
+  schemas:
+    Envelope:
+      type: object
+      description: CloudEvents 1.0 (structured mode)
+      required: [specversion, id, source, type, time, subject, data]
+      properties:
+        specversion: { const: '1.0' }
+        id: { type: string, format: uuid, description: Chiave di deduplicazione }
+        source: { const: 'urn:k-digitale:majordomo' }
+        type: { type: string, examples: ['majordomo.v1.PositionOpened'] }
+        time: { type: string, format: date-time }
+        subject: { type: string, description: jobId (chiave di partizione) }
+        traceparent: { type: string, description: W3C Trace Context }
+        data: { type: object }
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: { type: number }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+  messages:
+    JobStatusChanged:
+      name: JobStatusChanged
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [jobId, from, to, parameterSetVersion]
+                properties:
+                  jobId: { type: string, format: uuid }
+                  from: { type: string }
+                  to: { type: string }
+                  parameterSetVersion: { type: integer }
+                  changedBy: { type: string }
+    JobHalted:
+      name: JobHalted
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [jobId, reason]
+                properties:
+                  jobId: { type: string, format: uuid }
+                  reason: { enum: [DailyLossLimitReached, DrawdownLimitReached, KillSwitch, ReconciliationFailure, PerformanceOutOfBand, Manual] }
+                  detail: { type: string }
+    PositionOpened:
+      name: PositionOpened
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [jobId, orderId, dealId, epic, direction, size, openLevel, stopLevel]
+                properties:
+                  jobId: { type: string, format: uuid }
+                  orderId: { type: string, format: uuid }
+                  decisionId: { type: string, format: uuid }
+                  dealId: { type: string }
+                  epic: { type: string }
+                  direction: { enum: [BUY, SELL] }
+                  size: { type: number }
+                  openLevel: { type: number }
+                  stopLevel: { type: number }
+                  profitLevel: { type: [number, 'null'] }
+                  riskAmount: { $ref: '#/components/schemas/Money' }
+    PositionClosed:
+      name: PositionClosed
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [jobId, dealId, epic, closeLevel, realizedPnl, source]
+                properties:
+                  jobId: { type: [string, 'null'], format: uuid }
+                  dealId: { type: string }
+                  epic: { type: string }
+                  closeLevel: { type: number }
+                  realizedPnl: { $ref: '#/components/schemas/Money' }
+                  source: { enum: [Signal, TimeStop, StopLoss, TakeProfit, KillSwitch, Broker, Manual] }
+    OrderRejected:
+      name: OrderRejected
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [jobId, orderId, epic, reason]
+                properties:
+                  jobId: { type: string, format: uuid }
+                  orderId: { type: string, format: uuid }
+                  epic: { type: string }
+                  reason: { type: string }
+                  brokerReason: { type: [string, 'null'] }
+    RiskLimitReached:
+      name: RiskLimitReached
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [scope, limit, value, threshold]
+                properties:
+                  scope: { enum: [job, portfolio] }
+                  jobId: { type: [string, 'null'], format: uuid }
+                  limit: { enum: [DailyLoss, Drawdown, Exposure, Leverage, OrdersPerDay] }
+                  value: { type: number }
+                  threshold: { type: number }
+    KillSwitchActivated:
+      name: KillSwitchActivated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [scope, reason, activatedBy]
+                properties:
+                  scope: { enum: [global, job] }
+                  jobIds: { type: array, items: { type: string, format: uuid } }
+                  reason: { type: string }
+                  activatedBy: { type: string }
+    ReconciliationDriftDetected:
+      name: ReconciliationDriftDetected
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/Envelope'
+          - type: object
+            properties:
+              data:
+                type: object
+                required: [kind, detail]
+                properties:
+                  kind: { enum: [UnknownPositionAtBroker, MissingPositionAtBroker, SizeMismatch, StopMismatch, BalanceMismatch] }
+                  dealId: { type: [string, 'null'] }
+                  detail: { type: string }
+                  autoResolved: { type: boolean }
