@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Modulo MarketData: catalogo strumenti e prezzi (nello scheletro: lettura via ACL con cache breve). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Majordomo.Infrastructure\Majordomo.Infrastructure.csproj" />
+    <ProjectReference Include="..\Majordomo.MarketData.Contracts\Majordomo.MarketData.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Integrations\Majordomo.CapitalCom\Majordomo.CapitalCom.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Majordomo.UnitTests" />
+  </ItemGroup>
+</Project>

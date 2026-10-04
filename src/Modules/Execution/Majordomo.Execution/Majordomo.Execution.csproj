@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Modulo Execution: ordini, macchina a stati, conferme, riconciliazione (ADR-0004). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Majordomo.Infrastructure\Majordomo.Infrastructure.csproj" />
+    <ProjectReference Include="..\Majordomo.Execution.Contracts\Majordomo.Execution.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Integrations\Majordomo.CapitalCom\Majordomo.CapitalCom.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Majordomo.UnitTests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- API pubblica del modulo Strategy: job attivi, parametri tipizzati, halt. -->
+
+</Project>
