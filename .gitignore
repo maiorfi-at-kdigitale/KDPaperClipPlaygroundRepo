@@ -1,2 +1,26 @@
 # Impostazioni locali dell'ambiente di esecuzione (percorsi specifici della macchina)
 .claude/settings.local.json
+
+# Build .NET
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.rsuser
+.vs/
+*.DotSettings.user
+
+# Segreti e configurazioni locali (usare dotnet user-secrets)
+appsettings.Local.json
+deploy/local/.env
+
+# Python (forecasting-svc)
+__pycache__/
+.venv/
+src/forecasting-svc/_gen/
+*.pyc
+
+# Postman: ambienti personali
+postman/*.private.postman_environment.json

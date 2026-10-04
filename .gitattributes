@@ -1,0 +1,13 @@
+# Normalizzazione dei fine riga: i file montati nei container (script, SQL, mapping WireMock)
+# devono restare LF anche su Windows; i file di Visual Studio restano CRLF.
+* text=auto eol=lf
+*.sln text eol=crlf
+*.slnx text eol=crlf
+*.csproj text eol=crlf
+*.props text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.sh text eol=lf
+*.sql text eol=lf
+*.png binary
+*.jpg binary
