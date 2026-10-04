@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Client gRPC verso il Forecasting Service Python (ADR-0002). Il .proto è il contratto in docs/. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Majordomo.Observability\Majordomo.Observability.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.Net.ClientFactory" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\..\..\docs\capital-majordomo\contracts\proto\forecasting\v1\forecasting.proto"
+              ProtoRoot="..\..\..\docs\capital-majordomo\contracts\proto"
+              GrpcServices="Client"
+              Link="Protos\forecasting.proto" />
+  </ItemGroup>
+</Project>
