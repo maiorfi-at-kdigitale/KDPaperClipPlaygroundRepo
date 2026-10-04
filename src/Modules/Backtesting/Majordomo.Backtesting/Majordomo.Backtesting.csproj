@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Modulo Backtesting: richieste asincrone di backtest (operation pattern), runner nel worker. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Majordomo.Infrastructure\Majordomo.Infrastructure.csproj" />
+    <ProjectReference Include="..\Majordomo.Backtesting.Contracts\Majordomo.Backtesting.Contracts.csproj" />
+    <ProjectReference Include="..\..\Strategy\Majordomo.Strategy.Contracts\Majordomo.Strategy.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Majordomo.UnitTests" />
+  </ItemGroup>
+</Project>

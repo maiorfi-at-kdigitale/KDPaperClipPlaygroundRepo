@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- API pubblica del modulo Risk: valutazione pre-trade e stato del kill switch. -->
+
+</Project>

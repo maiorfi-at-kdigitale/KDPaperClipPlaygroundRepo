@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- API pubblica del modulo Portfolio: snapshot di rischio per job. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Risk\Majordomo.Risk.Contracts\Majordomo.Risk.Contracts.csproj" />
+  </ItemGroup>
+</Project>

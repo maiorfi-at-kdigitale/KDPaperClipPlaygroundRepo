@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Majordomo.Infrastructure/Majordomo.Infrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/Majordomo.Observability/Majordomo.Observability.csproj" />
+    <Project Path="src/BuildingBlocks/Majordomo.SharedKernel/Majordomo.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Integrations/">
+    <Project Path="src/Integrations/Majordomo.CapitalCom/Majordomo.CapitalCom.csproj" />
+    <Project Path="src/Integrations/Majordomo.Forecasting.Client/Majordomo.Forecasting.Client.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Backtesting/">
+    <Project Path="src/Modules/Backtesting/Majordomo.Backtesting.Contracts/Majordomo.Backtesting.Contracts.csproj" />
+    <Project Path="src/Modules/Backtesting/Majordomo.Backtesting/Majordomo.Backtesting.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Execution/">
+    <Project Path="src/Modules/Execution/Majordomo.Execution.Contracts/Majordomo.Execution.Contracts.csproj" />
+    <Project Path="src/Modules/Execution/Majordomo.Execution/Majordomo.Execution.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/MarketData/">
+    <Project Path="src/Modules/MarketData/Majordomo.MarketData.Contracts/Majordomo.MarketData.Contracts.csproj" />
+    <Project Path="src/Modules/MarketData/Majordomo.MarketData/Majordomo.MarketData.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/Majordomo.Notifications/Majordomo.Notifications.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Portfolio/">
+    <Project Path="src/Modules/Portfolio/Majordomo.Portfolio.Contracts/Majordomo.Portfolio.Contracts.csproj" />
+    <Project Path="src/Modules/Portfolio/Majordomo.Portfolio/Majordomo.Portfolio.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Risk/">
+    <Project Path="src/Modules/Risk/Majordomo.Risk.Contracts/Majordomo.Risk.Contracts.csproj" />
+    <Project Path="src/Modules/Risk/Majordomo.Risk/Majordomo.Risk.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Strategy/">
+    <Project Path="src/Modules/Strategy/Majordomo.Strategy.Contracts/Majordomo.Strategy.Contracts.csproj" />
+    <Project Path="src/Modules/Strategy/Majordomo.Strategy/Majordomo.Strategy.csproj" />
+  </Folder>
+</Solution>

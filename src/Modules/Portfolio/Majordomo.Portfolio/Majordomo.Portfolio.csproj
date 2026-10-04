@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Modulo Portfolio: posizioni, equity, snapshot di rischio, report di performance. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Majordomo.Infrastructure\Majordomo.Infrastructure.csproj" />
+    <ProjectReference Include="..\Majordomo.Portfolio.Contracts\Majordomo.Portfolio.Contracts.csproj" />
+    <ProjectReference Include="..\..\Execution\Majordomo.Execution.Contracts\Majordomo.Execution.Contracts.csproj" />
+    <ProjectReference Include="..\..\Risk\Majordomo.Risk.Contracts\Majordomo.Risk.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Integrations\Majordomo.CapitalCom\Majordomo.CapitalCom.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Majordomo.UnitTests" />
+  </ItemGroup>
+</Project>
