@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "majordomo (docker)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "majordomo",
+      "Username": "majordomo",
+      "SSLMode": "prefer"
+    }
+  }
+}
