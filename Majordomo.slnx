@@ -5,6 +5,10 @@
     <Project Path="src/BuildingBlocks/Majordomo.Observability/Majordomo.Observability.csproj" />
     <Project Path="src/BuildingBlocks/Majordomo.SharedKernel/Majordomo.SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/src/Hosts/">
+    <Project Path="src/Hosts/Majordomo.Api/Majordomo.Api.csproj" />
+    <Project Path="src/Hosts/Majordomo.Worker/Majordomo.Worker.csproj" />
+  </Folder>
   <Folder Name="/src/Integrations/">
     <Project Path="src/Integrations/Majordomo.CapitalCom/Majordomo.CapitalCom.csproj" />
     <Project Path="src/Integrations/Majordomo.Forecasting.Client/Majordomo.Forecasting.Client.csproj" />
@@ -36,5 +40,12 @@
   <Folder Name="/src/Modules/Strategy/">
     <Project Path="src/Modules/Strategy/Majordomo.Strategy.Contracts/Majordomo.Strategy.Contracts.csproj" />
     <Project Path="src/Modules/Strategy/Majordomo.Strategy/Majordomo.Strategy.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Majordomo.ArchitectureTests/Majordomo.ArchitectureTests.csproj" />
+    <Project Path="tests/Majordomo.UnitTests/Majordomo.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Majordomo.ForecastingStub/Majordomo.ForecastingStub.csproj" />
   </Folder>
 </Solution>

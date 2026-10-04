@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Fitness function ADR-0001: un modulo può dipendere da un altro solo tramite i suoi .Contracts. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hosts\Majordomo.Api\Majordomo.Api.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\Majordomo.Worker\Majordomo.Worker.csproj" />
+  </ItemGroup>
+</Project>

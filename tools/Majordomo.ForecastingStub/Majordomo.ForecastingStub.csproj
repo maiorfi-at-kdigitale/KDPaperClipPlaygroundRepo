@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Stub .NET del Forecasting Service (stesso contratto gRPC del servizio Python, ADR-0002).
+       Solo per sviluppo/playground: previsione naive (drift + bande da volatilità). -->
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\..\docs\capital-majordomo\contracts\proto\forecasting\v1\forecasting.proto"
+              ProtoRoot="..\..\docs\capital-majordomo\contracts\proto"
+              GrpcServices="Server"
+              Link="Protos\forecasting.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Majordomo.UnitTests" />
+  </ItemGroup>
+</Project>

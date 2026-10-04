@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+  <!-- Host Worker Service: ciclo decisionale, outbox, kill switch, backtest, riconciliazione.
+       Istanza attiva singola tramite leader election (advisory lock PostgreSQL). -->
+  <PropertyGroup>
+    <UserSecretsId>majordomo-dev-7c1f3a52</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\Majordomo.Infrastructure\Majordomo.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Strategy\Majordomo.Strategy\Majordomo.Strategy.csproj" />
+    <ProjectReference Include="..\..\Modules\Risk\Majordomo.Risk\Majordomo.Risk.csproj" />
+    <ProjectReference Include="..\..\Modules\Execution\Majordomo.Execution\Majordomo.Execution.csproj" />
+    <ProjectReference Include="..\..\Modules\Portfolio\Majordomo.Portfolio\Majordomo.Portfolio.csproj" />
+    <ProjectReference Include="..\..\Modules\MarketData\Majordomo.MarketData\Majordomo.MarketData.csproj" />
+    <ProjectReference Include="..\..\Modules\Backtesting\Majordomo.Backtesting\Majordomo.Backtesting.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\Majordomo.Notifications\Majordomo.Notifications.csproj" />
+  </ItemGroup>
+</Project>
