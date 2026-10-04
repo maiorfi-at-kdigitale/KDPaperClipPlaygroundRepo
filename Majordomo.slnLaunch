@@ -1,0 +1,37 @@
+[
+  {
+    "Name": "Majordomo (tutto)",
+    "Projects": [
+      {
+        "Path": "tools\\Majordomo.ForecastingStub\\Majordomo.ForecastingStub.csproj",
+        "Action": "Start",
+        "DebugTarget": "Majordomo.ForecastingStub"
+      },
+      {
+        "Path": "src\\Hosts\\Majordomo.Api\\Majordomo.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "Majordomo.Api"
+      },
+      {
+        "Path": "src\\Hosts\\Majordomo.Worker\\Majordomo.Worker.csproj",
+        "Action": "Start",
+        "DebugTarget": "Majordomo.Worker"
+      }
+    ]
+  },
+  {
+    "Name": "Majordomo (Api + Stub)",
+    "Projects": [
+      {
+        "Path": "tools\\Majordomo.ForecastingStub\\Majordomo.ForecastingStub.csproj",
+        "Action": "Start",
+        "DebugTarget": "Majordomo.ForecastingStub"
+      },
+      {
+        "Path": "src\\Hosts\\Majordomo.Api\\Majordomo.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "Majordomo.Api"
+      }
+    ]
+  }
+]
